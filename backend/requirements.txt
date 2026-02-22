@@ -18,3 +18,4 @@ tenacity
 sentry-sdk
 greenlet
 alembic
+pydantic-settings
