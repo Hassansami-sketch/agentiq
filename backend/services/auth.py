@@ -11,7 +11,7 @@ from db.models import User, Organization, APIKey
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-def hash_password(p): return pwd_context.hash(p)
+def hash_password(p): return pwd_context.hash(p[:72])
 def verify_password(plain, hashed): return pwd_context.verify(plain, hashed)
 
 def create_access_token(data: dict, expires_delta=None) -> str:
