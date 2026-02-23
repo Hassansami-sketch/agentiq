@@ -1643,6 +1643,10 @@ Best,
 
 <script>
 // ── Sample leads data ────────────────────────────────────────────────────────
+
+const API_BASE = 'https://agentiq-production.up.railway.app';
+let authToken = null;
+
 const LEADS = [
   { id:1, company:"Stripe", contact:"Jane Smith", email:"jane@stripe.com", industry:"Fintech", status:"new", score:92, source:"ai_enriched" },
   { id:2, company:"Notion Labs", contact:"Bob Lee", email:"bob@notion.so", industry:"Productivity", status:"contacted", score:78, source:"csv_import" },
@@ -1659,7 +1663,7 @@ let currentUser = null;
 let currentLeads = [...LEADS];
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
-function doLogin() {
+async function doLogin() {
   const email = document.getElementById('login-email').value;
   const pass  = document.getElementById('login-password').value;
 
@@ -1669,18 +1673,33 @@ function doLogin() {
     return;
   }
 
-  // Simulate API call: POST /auth/login
-  if (email === 'admin@agentiq.app' && pass === 'password') {
-    currentUser = { email, name: 'Jane Smith', role: 'admin' };
+  try {
+    showToast('Logging in...', 'info');
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `username=${encodeURIComponent(email)}&password=${encodeURIComponent(pass)}`
+    });
+
+    if (!res.ok) {
+      document.getElementById('login-error-msg').textContent = 'Invalid email or password.';
+      document.getElementById('login-error').style.display = 'flex';
+      return;
+    }
+
+    const data = await res.json();
+    authToken = data.access_token;
+    currentUser = { email, name: email.split('@')[0], role: 'admin' };
     document.getElementById('login-screen').classList.remove('show');
     document.getElementById('user-name').textContent = currentUser.name;
     document.getElementById('user-role').textContent = currentUser.role;
-    document.getElementById('user-avatar').textContent = currentUser.name[0];
+    document.getElementById('user-avatar').textContent = currentUser.name[0].toUpperCase();
     document.getElementById('login-error').style.display = 'none';
-    renderLeads(currentLeads);
-    showToast('Welcome back, Jane!', 'success');
-  } else {
-    document.getElementById('login-error-msg').textContent = 'Invalid credentials. Try: admin@agentiq.app / password';
+    await loadLeads();
+    showToast('Welcome back!', 'success');
+
+  } catch (err) {
+    document.getElementById('login-error-msg').textContent = 'Cannot connect to server. Check your internet.';
     document.getElementById('login-error').style.display = 'flex';
   }
 }
@@ -1778,10 +1797,32 @@ function updateStatus(id, status) {
   const lead = currentLeads.find(l => l.id === id);
   if (lead) { lead.status = status; renderLeads(currentLeads); }
   showToast(`Lead moved to "${status}"`, 'success');
-}
 
-function enrichLead(id) {
-  showToast(`POST /leads/${id}/enrich — AI enrichment queued (20-60s)`, 'info');
+async function loadLeads() {
+  try {
+    const res = await fetch(`${API_BASE}/leads`, {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    const data = await res.json();
+    currentLeads = data.leads || data || [];
+    renderLeads(currentLeads);
+  } catch (err) {
+    showToast('Could not load leads from server', 'error');
+  }
+}
+}
+async function enrichLead(id) {
+  showToast('AI enrichment started...', 'info');
+  try {
+    await fetch(`${API_BASE}/leads/${id}/enrich`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    showToast('Enrichment queued! Results ready in 30 seconds.', 'success');
+    setTimeout(loadLeads, 30000);
+  } catch (err) {
+    showToast('Enrichment failed', 'error');
+  }
 }
 
 function saveLead() {
