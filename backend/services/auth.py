@@ -13,7 +13,7 @@ from db.models import User, Organization, APIKey
 from passlib.context import CryptContext
 import hashlib
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 def hash_password(p):
     # Hash to sha256 first to avoid bcrypt 72-byte limit
