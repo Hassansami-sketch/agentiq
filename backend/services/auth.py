@@ -8,12 +8,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from core.config import settings
 from db.models import User, Organization, APIKey
+
+
 from passlib.context import CryptContext
+import hashlib
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-def hash_password(p): return pwd_context.hash(p[:72])
-def verify_password(plain, hashed): return pwd_context.verify(plain[:72], hashed)
+def hash_password(p):
+    # Hash to sha256 first to avoid bcrypt 72-byte limit
+    hashed = hashlib.sha256(p.encode()).hexdigest()
+    return pwd_context.hash(hashed)
+
+def verify_password(plain, hashed):
+    plain_hashed = hashlib.sha256(plain.encode()).hexdigest()
+    return pwd_context.verify(plain_hashed, hashed)
+
 
 def create_access_token(data: dict, expires_delta=None) -> str:
     to_encode = data.copy()
