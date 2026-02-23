@@ -1674,15 +1674,14 @@ async function doLogin() {
   }
 
   try {
-    showToast('Logging in...', 'info');
-    const res = await fetch(`${API_BASE}/auth/login`, {
+    const res = await fetch('https://agentiq-production.up.railway.app/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: `username=${encodeURIComponent(email)}&password=${encodeURIComponent(pass)}`
     });
 
     if (!res.ok) {
-      document.getElementById('login-error-msg').textContent = 'Invalid email or password.';
+      document.getElementById('login-error-msg').textContent = 'Wrong email or password.';
       document.getElementById('login-error').style.display = 'flex';
       return;
     }
@@ -1695,11 +1694,10 @@ async function doLogin() {
     document.getElementById('user-role').textContent = currentUser.role;
     document.getElementById('user-avatar').textContent = currentUser.name[0].toUpperCase();
     document.getElementById('login-error').style.display = 'none';
-    await loadLeads();
     showToast('Welcome back!', 'success');
 
   } catch (err) {
-    document.getElementById('login-error-msg').textContent = 'Cannot connect to server. Check your internet.';
+    document.getElementById('login-error-msg').textContent = 'Cannot connect to server.';
     document.getElementById('login-error').style.display = 'flex';
   }
 }
