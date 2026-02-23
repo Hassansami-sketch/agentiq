@@ -19,3 +19,4 @@ sentry-sdk
 greenlet
 alembic
 pydantic-settings
+aiofiles

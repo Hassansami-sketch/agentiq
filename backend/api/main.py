@@ -24,7 +24,11 @@ from collections import defaultdict
 
 from fastapi import FastAPI, Depends, HTTPException, Header, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, JSONResponse
+
+from fastapi.responses import StreamingResponse, JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
+
+
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc
@@ -103,6 +107,12 @@ app = FastAPI(
     docs_url="/docs", redoc_url="/redoc",
     lifespan=lifespan
 )
+
+@app.get("/dashboard")
+async def serve_dashboard():
+    return FileResponse("dashboard.html")
+
+
 
 register_exception_handlers(app)
 
