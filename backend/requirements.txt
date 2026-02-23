@@ -20,3 +20,5 @@ greenlet
 alembic
 pydantic-settings
 aiofiles
+bcrypt
+passlib[bcrypt]
